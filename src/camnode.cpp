@@ -759,7 +759,6 @@ void WriteCameraFeaturesFromRosparam(void)
     ArvGcNode						*pGcNode;
 	GError							*error=NULL;
 
-
 	global.phNode->getParam (ros::this_node::getName(), xmlrpcParams);
 
 
@@ -768,7 +767,6 @@ void WriteCameraFeaturesFromRosparam(void)
 		for (iter=xmlrpcParams.begin(); iter!=xmlrpcParams.end(); iter++)
 		{
 			std::string		key = iter->first;
-
 			pGcNode = arv_device_get_feature (global.pDevice, key.c_str());
 			if (pGcNode && arv_gc_feature_node_is_implemented (ARV_GC_FEATURE_NODE (pGcNode), &error))
 			{
@@ -847,7 +845,7 @@ int main(int argc, char** argv)
     global.phNode = new ros::NodeHandle();
 
 
-    //g_type_init ();
+    g_type_init ();
 
     // Print out some useful info.
     ROS_INFO ("Attached cameras:");
@@ -1009,7 +1007,12 @@ int main(int argc, char** argv)
 #endif
     	
 		// Start the camerainfo manager.
-		global.pCameraInfoManager = new camera_info_manager::CameraInfoManager(ros::NodeHandle(ros::this_node::getName()), arv_device_get_string_feature_value (global.pDevice, "DeviceID"));
+        ros::NodeHandle pnh("~");
+        std::string camera_info_url;
+        if(!pnh.getParam("url", camera_info_url)){
+            ROS_ERROR("ros parameter url not set in camnode where's the camera_info file?");
+        }
+		global.pCameraInfoManager = new camera_info_manager::CameraInfoManager(ros::NodeHandle(ros::this_node::getName()), arv_device_get_string_feature_value (global.pDevice, "DeviceID"), camera_info_url);
 
 		// Start the dynamic_reconfigure server.
 		dynamic_reconfigure::Server<Config> 				reconfigureServer;
@@ -1068,7 +1071,7 @@ int main(int argc, char** argv)
 		ROS_INFO ("    Can set FocusPos:      %s", global.isImplementedFocusPos ? "True" : "False");
 
 		if (global.isImplementedMtu)
-			ROS_INFO ("    Network mtu          = %lu", arv_device_get_integer_feature_value(global.pDevice, "GevSCPSPacketSize"));
+			ROS_INFO ("    Network mtu          = %lu", (long int) arv_device_get_integer_feature_value(global.pDevice, "GevSCPSPacketSize"));
 
 		ROS_INFO ("    ---------------------------");
 
