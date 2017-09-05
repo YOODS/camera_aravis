@@ -39,7 +39,6 @@
 #include <camera_info_manager/camera_info_manager.h>
 
 #include <dynamic_reconfigure/server.h>
-#include <driver_base/SensorLevels.h>
 #include <tf/transform_listener.h>
 #include <camera_aravis/CameraAravisConfig.h>
 
@@ -845,7 +844,9 @@ int main(int argc, char** argv)
     global.phNode = new ros::NodeHandle();
 
 
+#if !GLIB_CHECK_VERSION(2,35,0)
     g_type_init ();
+#endif
 
     // Print out some useful info.
     ROS_INFO ("Attached cameras:");
