@@ -12,7 +12,7 @@
 // For example, if a camera has a feature called "IRFormat" that is an integer 0, 1, or 2, you can do
 // rosparam set camnode/IRFormat 2
 // and this driver will write it to the camera at startup.  Note that the datatype of the parameter
-// must be correct for the camera feature (e.g. bool, int, double, string, etc), so for example you should use
+// must be correct for the camera feature (e.g. bool, int, double, string, etc), so oftwator example you should use
 // rosparam set camnode/GainAuto true
 // and NOT
 // rosparam set camnode/GainAuto 1
@@ -42,9 +42,11 @@
 #include <tf/transform_listener.h>
 #include <camera_aravis/CameraAravisConfig.h>
 
+#include "std_srvs/Trigger.h"  //KZ-added
+
 #include "XmlRpc.h"
 
-//#define TUNING	// Allows tuning the gains for the timestamp controller.  Publishes output on topic /dt, and receives gains on params /kp, /ki, /kd
+ //#define TUNING	// Allows tuning the gains for the timestamp controller.  Publishes output on topic /dt, and receives gains on params /kp, /ki, /kd
 
 
 #define CLIP(x,lo,hi)	MIN(MAX((lo),(x)),(hi))
@@ -254,10 +256,6 @@ void RosReconfigure_callback(Config &config, uint32_t level)
 					|| changedAcquisitionMode || changedTriggerSource || changedSoftwarerate) && config.GainAuto=="Once"))
     	config.GainAuto = "Off";
 
-    if (changedAcquisitionFrameRate)
-    	config.TriggerMode = "Off";
-
-
     // Find what changed for any reason.
     changedAcquire    			= (global.config.Acquire != config.Acquire);
     changedAcquisitionFrameRate = (global.config.AcquisitionFrameRate != config.AcquisitionFrameRate);
@@ -388,10 +386,7 @@ void RosReconfigure_callback(Config &config, uint32_t level)
 		}
     	if (!strcmp(config.TriggerSource.c_str(),"Software"))
     	{
-        	ROS_INFO ("Set softwaretriggerrate = %f", 1000.0/ceil(1000.0 / config.softwaretriggerrate));
-
-    		// Turn on software timer callback.
-    		global.idSoftwareTriggerTimer = g_timeout_add ((guint)ceil(1000.0 / config.softwaretriggerrate), SoftwareTrigger_callback, global.pCamera);
+        	ROS_INFO ("Set TriggerSource=Software");
     	}
     }
     if (changedFocusPos)
@@ -580,13 +575,12 @@ static void NewBuffer_callback (ArvStream *pStream, ApplicationData *pApplicatio
 			global.camerainfo.height = global.heightRoi;
 
 			global.publisher.publish(msg, global.camerainfo);
-				
         }
         else
         	ROS_WARN ("Frame error: %s", szBufferStatusFromInt[arv_buffer_get_status(pBuffer)]);
         	
-        arv_stream_push_buffer (pStream, pBuffer);
-        iFrame++;
+         arv_stream_push_buffer (pStream, pBuffer);
+         iFrame++;
     }
 } // NewBuffer_callback()
 
@@ -598,11 +592,11 @@ static void ControlLost_callback (ArvGvDevice *pGvDevice)
     global.bCancel = TRUE;
 }
 
-static gboolean SoftwareTrigger_callback (void *pCamera)
+bool SoftwareTrigger_srv(std_srvs::Trigger::Request &req,std_srvs::Trigger::Response &res)
 {
 	arv_device_execute_command (global.pDevice, "TriggerSoftware");
-
-    return TRUE;
+   res.success=TRUE;
+   return TRUE;
 }
 
 
@@ -620,12 +614,9 @@ static gboolean PeriodicTask_callback (void *applicationdata)
         g_main_loop_quit (pData->main_loop);
         return FALSE;
     }
-
     ros::spinOnce();
-
     return TRUE;
 } // PeriodicTask_callback()
-
 
 // Get the child and the child's sibling, where <p___> indicates an indirection.
 NODEEX GetGcFirstChild(ArvGc *pGenicam, NODEEX nodeex)
@@ -819,7 +810,6 @@ void WriteCameraFeaturesFromRosparam(void)
 		}
 	}
 } // WriteCameraFeaturesFromRosparam()
-
 
 
 int main(int argc, char** argv) 
@@ -1113,10 +1103,12 @@ int main(int argc, char** argv)
 		image_transport::ImageTransport		*pTransport = new image_transport::ImageTransport(*global.phNode);
 		global.publisher = pTransport->advertiseCamera(ros::this_node::getName()+"/image_raw", 1);
 
+		ros::ServiceServer swtsrv=global.phNode->advertiseService("camera/queue",SoftwareTrigger_srv);	//KZ-added
+
 		// Connect signals with callbacks.
 		g_signal_connect (pStream,        "new-buffer",   G_CALLBACK (NewBuffer_callback),   &applicationdata);
 		g_signal_connect (global.pDevice, "control-lost", G_CALLBACK (ControlLost_callback), NULL);
-		g_timeout_add_seconds (1, PeriodicTask_callback, &applicationdata);
+		g_idle_add(PeriodicTask_callback, &applicationdata);
 		arv_stream_set_emit_signals ((ArvStream *)pStream, TRUE);
 
 
