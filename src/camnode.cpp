@@ -830,6 +830,8 @@ int main(int argc, char** argv)
     global.config = global.config.__getDefault__();
     global.idSoftwareTriggerTimer = 0;
 
+    setvbuf(stdout,NULL,_IOLBF,256);
+
     ros::init(argc, argv, "camera");
     global.phNode = new ros::NodeHandle();
 
@@ -1116,7 +1118,8 @@ int main(int argc, char** argv)
 		pSigintHandlerOld = signal (SIGINT, set_cancel);
 
 		arv_device_execute_command (global.pDevice, "AcquisitionStart");
-
+//fflush(stdout);
+//fflush(stderr);
 		applicationdata.main_loop = g_main_loop_new (NULL, FALSE);
 		g_main_loop_run (applicationdata.main_loop);
 
