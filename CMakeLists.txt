@@ -7,6 +7,17 @@ find_package(Aravis REQUIRED)
 find_package(GLIB2 REQUIRED)
 
 generate_dynamic_reconfigure_options(cfg/CameraAravisConfig.cfg)
+
+add_service_files(
+   FILES
+	GevRegs.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
 catkin_package(
     DEPENDS Aravis GLIB2
     CATKIN_DEPENDS roscpp sensor_msgs image_transport camera_info_manager dynamic_reconfigure tf
