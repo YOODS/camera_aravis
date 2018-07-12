@@ -42,8 +42,8 @@
 #include <tf/transform_listener.h>
 #include <camera_aravis/CameraAravisConfig.h>
 
-#include "std_srvs/Trigger.h"  //KZ-added
-#include "camera_aravis/GevRegs.h"  //KZ-added
+#include "std_srvs/Trigger.h" // KZ-added
+#include "camera_aravis/GevRegs.h" // KZ-added
 
 #include "XmlRpc.h"
 
@@ -593,20 +593,22 @@ static void ControlLost_callback (ArvGvDevice *pGvDevice)
     global.bCancel = TRUE;
 }
 
-bool SoftwareTrigger_srv(std_srvs::Trigger::Request &req,std_srvs::Trigger::Response &res)
+bool SoftwareTrigger_srv(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
-	arv_device_execute_command (global.pDevice, "TriggerSoftware");
-   res.success=TRUE;
-   return TRUE;
+  arv_device_execute_command (global.pDevice, "TriggerSoftware");
+  res.success = TRUE;
+  return TRUE;
 }
-bool WriteReg_srv(camera_aravis::GevRegs::Request &req,camera_aravis::GevRegs::Response &res){
-	arv_device_write_register(global.pDevice,req.address,req.data,NULL);
-   return TRUE;
+
+bool WriteReg_srv(camera_aravis::GevRegs::Request &req, camera_aravis::GevRegs::Response &res)
+{
+  return arv_device_write_register(global.pDevice, req.address, req.data, NULL);
 }
-bool ReadReg_srv(camera_aravis::GevRegs::Request &req,camera_aravis::GevRegs::Response &res){
-	res.data=1234;
-	arv_device_read_register(global.pDevice,req.address,&res.data,NULL);
-   return TRUE;
+
+bool ReadReg_srv(camera_aravis::GevRegs::Request &req, camera_aravis::GevRegs::Response &res)
+{
+  res.data = 1234;
+  return arv_device_read_register(global.pDevice, req.address, &res.data, NULL);
 }
 
 
@@ -1115,9 +1117,9 @@ int main(int argc, char** argv)
 		image_transport::ImageTransport		*pTransport = new image_transport::ImageTransport(*global.phNode);
 		global.publisher = pTransport->advertiseCamera(ros::this_node::getName()+"/image_raw", 1);
 
-		ros::ServiceServer swtsrv=global.phNode->advertiseService("camera/queue",SoftwareTrigger_srv);	//KZ-added
-		ros::ServiceServer regwsrv=global.phNode->advertiseService("camera/regw",WriteReg_srv);	//KZ-added
-		ros::ServiceServer regrsrv=global.phNode->advertiseService("camera/regr",ReadReg_srv);	//KZ-added
+		ros::ServiceServer swtsrv = global.phNode->advertiseService("camera/queue", SoftwareTrigger_srv); // KZ-added
+		ros::ServiceServer regwsrv = global.phNode->advertiseService("camera/regw", WriteReg_srv); // KZ-added
+		ros::ServiceServer regrsrv = global.phNode->advertiseService("camera/regr", ReadReg_srv); // KZ-added
 
 		// Connect signals with callbacks.
 		g_signal_connect (pStream,        "new-buffer",   G_CALLBACK (NewBuffer_callback),   &applicationdata);
