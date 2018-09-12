@@ -1103,6 +1103,7 @@ int main(int argc, char** argv)
 			else
 			{
 				ROS_WARN("Could not create image stream for %s.  Retrying...", pszGuid);
+        exit(-11);
 				ros::Duration(1.0).sleep();
 			    ros::spinOnce();
 			}
