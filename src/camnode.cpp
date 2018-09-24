@@ -1125,7 +1125,7 @@ int main(int argc, char** argv)
 		// Connect signals with callbacks.
 		g_signal_connect (pStream,        "new-buffer",   G_CALLBACK (NewBuffer_callback),   &applicationdata);
 		g_signal_connect (global.pDevice, "control-lost", G_CALLBACK (ControlLost_callback), NULL);
-		g_idle_add(PeriodicTask_callback, &applicationdata);
+		g_timeout_add(20, PeriodicTask_callback, &applicationdata);
 		arv_stream_set_emit_signals ((ArvStream *)pStream, TRUE);
 
 
