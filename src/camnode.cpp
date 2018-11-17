@@ -63,6 +63,10 @@ typedef camera_aravis::CameraAravisConfig Config;
 
 static gboolean SoftwareTrigger_callback (void *);
 
+#include <sys/shm.h>
+static key_t shmkey;
+static unsigned char *shmptr=NULL;
+
 typedef struct
 {
 	const char *szName;
@@ -565,8 +569,18 @@ static void NewBuffer_callback (ArvStream *pStream, ApplicationData *pApplicatio
 			msg.height = global.heightRoi;
 			msg.encoding = global.pszPixelformat;
 			msg.step = msg.width * global.nBytesPixel;
-			msg.data = this_data;
-
+      if(shmptr==NULL){
+        msg.data = this_data;
+      }
+      else{
+        std::vector<uint8_t> keys(4);
+        keys[3]=shmkey>>24;
+        keys[2]=shmkey>>16;
+        keys[1]=shmkey>>8;
+        keys[0]=shmkey;
+        msg.data=keys;
+        std::memcpy(shmptr,&this_data[0],this_data.size());
+      }
 			// get current CameraInfo data
 			global.camerainfo = global.pCameraInfoManager->getCameraInfo();
 			global.camerainfo.header.stamp = msg.header.stamp;
@@ -576,12 +590,11 @@ static void NewBuffer_callback (ArvStream *pStream, ApplicationData *pApplicatio
 			global.camerainfo.height = global.heightRoi;
 
 			global.publisher.publish(msg, global.camerainfo);
-        }
-        else
-        	ROS_WARN ("Frame error: %s", szBufferStatusFromInt[arv_buffer_get_status(pBuffer)]);
-        	
-         arv_stream_push_buffer (pStream, pBuffer);
-         iFrame++;
+    }
+    else
+      ROS_WARN ("Frame error: %s", szBufferStatusFromInt[arv_buffer_get_status(pBuffer)]);  	
+      arv_stream_push_buffer (pStream, pBuffer);
+      iFrame++;
     }
 } // NewBuffer_callback()
 
@@ -884,7 +897,14 @@ int main(int argc, char** argv)
     		else
     			pszGuid = NULL;
     	}
-    	
+    	if (global.phNode->hasParam(ros::this_node::getName()+"/shmem")){
+    		int size;
+    		global.phNode->getParam(ros::this_node::getName()+"/shmem", size);
+            shmkey=shmget(IPC_PRIVATE,size,IPC_CREAT|0666);
+            shmptr=(unsigned char *)shmat(shmkey, NULL, 0);
+            shmptr[0]=1;//try writing
+fprintf(stderr,"shmem %d %d %d\n",size,shmkey,shmptr);
+        }
     	// Open the camera, and set it up.
     	ROS_INFO("Opening: %s", pszGuid ? pszGuid : "(any)");
 		while (TRUE)
@@ -1163,6 +1183,8 @@ int main(int argc, char** argv)
 		arv_device_execute_command (global.pDevice, "AcquisitionStop");
 
 		g_object_unref (pStream);
+
+        if(shmptr!=NULL) shmdt(shmptr);
 
     }
     else
