@@ -64,7 +64,7 @@ typedef camera_aravis::CameraAravisConfig Config;
 static gboolean SoftwareTrigger_callback (void *);
 
 #include <sys/shm.h>
-static key_t shmkey=0x39760022;
+static key_t shmkey=0x41524156; //"ARAV"
 static unsigned char *shmptr=NULL;
 
 typedef struct
@@ -897,6 +897,11 @@ int main(int argc, char** argv)
     		else
     			pszGuid = NULL;
     	}
+        if (global.phNode->hasParam(ros::this_node::getName()+"/ID")){
+            std::string idstr;
+            global.phNode->getParam(ros::this_node::getName()+"/ID", idstr);
+            for(int i=0;i<idstr.length();i++) shmkey+=(i+1)*idstr.at(i);
+        }
     	if (global.phNode->hasParam(ros::this_node::getName()+"/shmem")){
     		int size;
     		global.phNode->getParam(ros::this_node::getName()+"/shmem", size);
@@ -904,7 +909,7 @@ int main(int argc, char** argv)
             int sid=shmget(shmkey,size,IPC_CREAT|0666);
             shmptr=(unsigned char *)shmat(sid, NULL, 0);
             shmptr[0]=1;//try writing
-fprintf(stderr,"shmem %d %dkB %d\n",sid,size>>10,shmptr);
+fprintf(stderr,"shmem %x %dkB\n",shmkey,size>>10);
         }
     	// Open the camera, and set it up.
     	ROS_INFO("Opening: %s", pszGuid ? pszGuid : "(any)");
