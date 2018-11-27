@@ -531,7 +531,8 @@ static void NewBuffer_callback (ArvStream *pStream, ApplicationData *pApplicatio
 			// Camera/ROS Timestamp coordination.
 			cn				= (uint64_t)arv_buffer_get_timestamp(pBuffer);				// Camera now
 			rn	 			= ros::Time::now().toNSec();					// ROS now
-			global.frame_id++;
+//			global.frame_id++;
+			global.frame_id=arv_buffer_get_frame_id(pBuffer);
 			
 			if (iFrame < 10)
 			{
