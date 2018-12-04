@@ -149,6 +149,18 @@ const char	*szBufferStatusFromInt[] = {
 										"ARV_BUFFER_STATUS_FILLING",
 										"ARV_BUFFER_STATUS_ABORTED"
 										};
+//2018.11.28 TEST start
+static void stream_cb (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
+{
+        if (type == ARV_STREAM_CALLBACK_TYPE_INIT) {
+          if (!arv_make_thread_realtime (10))
+                printf ("Failed to make stream thread realtime\n");
+//	if (!arv_make_thread_high_priority (-10))
+//		printf ("Failed to make stream thread high priority\n");
+	}
+}
+//2018.11.28 TEST end
+
 
 
 static void set_cancel (int signal)
@@ -160,11 +172,11 @@ ArvGvStream *CreateStream(void)
 {
 	gboolean 		bAutoBuffer = FALSE;
 	gboolean 		bPacketResend = TRUE;
-	unsigned int 	timeoutPacket = 40; // milliseconds
+	unsigned int 	timeoutPacket = 1; //40 milliseconds originally
 	unsigned int 	timeoutFrameRetention = 200;
 
 	
-	ArvGvStream *pStream = (ArvGvStream *)arv_device_create_stream (global.pDevice, NULL, NULL);
+	ArvGvStream *pStream = (ArvGvStream *)arv_device_create_stream (global.pDevice, stream_cb, NULL);
 	if (pStream)
 	{
 		ArvBuffer	*pBuffer;
@@ -407,19 +419,20 @@ void RosReconfigure_callback(Config &config, uint32_t level)
     	else
     		ROS_INFO ("Camera does not support FocusPos.");
     }
-    if (changedMtu)
-    {
-    	if (global.isImplementedMtu)
+ //   if (changedMtu)
+ //   {
+ //   	if (global.isImplementedMtu)
 		{
 			ROS_INFO ("Set mtu = %d", config.mtu);
 			arv_device_set_integer_feature_value(global.pDevice, "GevSCPSPacketSize", config.mtu);
+			arv_camera_gv_set_packet_size (global.pCamera, 9000);
 			ros::Duration(1.0).sleep();
 			config.mtu = arv_device_get_integer_feature_value(global.pDevice, "GevSCPSPacketSize");
 			ROS_INFO ("Get mtu = %d", config.mtu);
 		}
-    	else
-    		ROS_INFO ("Camera does not support mtu (i.e. GevSCPSPacketSize).");
-    }
+//    	else
+//    		ROS_INFO ("Camera does not support mtu (i.e. GevSCPSPacketSize).");
+//    }
 
     if (changedAcquisitionMode)
     {
