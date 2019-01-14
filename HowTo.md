@@ -33,8 +33,10 @@ arv-tool-0.6
 ~~~
 catkin_make
 ~~~
-このときどうしても0.4とリンクしてしまうことがある(0.4がアンインストされていればビルドエラーになる)。  
-このときは~/cakin_ws/devel/下のキャッシュを消す。
+でよいが、0.4とリンクしようとしてビルドエラーになることがある。  
+このときは~/cakin_ws/下のキャッシュを消す。
 ~~~
-rm -fR ~/catkin_ws/devel/lib/camera_aravis
+rm -fR ~/catkin_ws/devel
+rm -fR ~/catkin_ws/build
 ~~~
+devel/lib/python2.7/dist-package/にライブラリを追加しているときは、一旦退避させておくこと。
