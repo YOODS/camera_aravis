@@ -419,9 +419,9 @@ void RosReconfigure_callback(Config &config, uint32_t level)
     	else
     		ROS_INFO ("Camera does not support FocusPos.");
     }
- //   if (changedMtu)
- //   {
- //   	if (global.isImplementedMtu)
+    if (changedMtu)
+    {
+    	if (global.isImplementedMtu)
 		{
 			ROS_INFO ("Set mtu = %d", config.mtu);
 			arv_device_set_integer_feature_value(global.pDevice, "GevSCPSPacketSize", config.mtu);
@@ -430,9 +430,9 @@ void RosReconfigure_callback(Config &config, uint32_t level)
 			config.mtu = arv_device_get_integer_feature_value(global.pDevice, "GevSCPSPacketSize");
 			ROS_INFO ("Get mtu = %d", config.mtu);
 		}
-//    	else
-//    		ROS_INFO ("Camera does not support mtu (i.e. GevSCPSPacketSize).");
-//    }
+    	else
+    		ROS_INFO ("Camera does not support mtu (i.e. GevSCPSPacketSize).");
+    }
 
     if (changedAcquisitionMode)
     {
