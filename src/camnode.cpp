@@ -426,35 +426,46 @@ void RosReconfigure_callback(Config &config, uint32_t level)
     	else
     		ROS_INFO ("Camera does not support FocusPos.");
     }
- //   if (changedMtu)
- //   {
- //   	if (global.isImplementedMtu)
-		{
-			ROS_INFO ("Set mtu = %d", config.mtu);
-			arv_device_set_integer_feature_value(global.pDevice, "GevSCPSPacketSize", config.mtu);
-//			arv_camera_gv_set_packet_size (global.pCamera, 9000);
-//			arv_camera_gv_set_packet_size (global.pCamera, 8996);
-			arv_camera_gv_set_packet_size (global.pCamera, 8192);
-			ros::Duration(1.0).sleep();
-			config.mtu = arv_device_get_integer_feature_value(global.pDevice, "GevSCPSPacketSize");
-			ROS_INFO ("Get mtu = %d", config.mtu);
-		}
-//    	else
-//    		ROS_INFO ("Camera does not support mtu (i.e. GevSCPSPacketSize).");
-//    }
+
+    if(strcmp(arv_device_get_string_feature_value(global.pDevice, "DeviceModelName"),"YCAM3D-III")==0)	//YCAM3D-III
+    {
+	ROS_INFO ("MODEL = YCAM3D-III");
+	ROS_INFO ("Set mtu = %d", config.mtu);
+	arv_device_set_integer_feature_value(global.pDevice, "GevSCPSPacketSize", config.mtu);
+	arv_camera_gv_set_packet_size (global.pCamera, 8192);
+	ros::Duration(1.0).sleep();
+	config.mtu = arv_device_get_integer_feature_value(global.pDevice, "GevSCPSPacketSize");
+	ROS_INFO ("Get mtu = %d", config.mtu);
+    }
+    else if (changedMtu)
+    {
+    	if (global.isImplementedMtu)
+	{
+		ROS_INFO ("Set mtu = %d", config.mtu);
+		arv_device_set_integer_feature_value(global.pDevice, "GevSCPSPacketSize", config.mtu);
+//		arv_camera_gv_set_packet_size (global.pCamera, 9000);
+//		arv_camera_gv_set_packet_size (global.pCamera, 8996);
+		arv_camera_gv_set_packet_size (global.pCamera, 8192);
+		ros::Duration(1.0).sleep();
+		config.mtu = arv_device_get_integer_feature_value(global.pDevice, "GevSCPSPacketSize");
+		ROS_INFO ("Get mtu = %d", config.mtu);
+	}
+    	else
+    		ROS_INFO ("Camera does not support mtu (i.e. GevSCPSPacketSize).");
+    }
 
     if (changedAcquisitionMode)
     {
     	if (global.isImplementedAcquisitionMode)
-		{
-			ROS_INFO ("Set AcquisitionMode = %s", config.AcquisitionMode.c_str());
-			arv_device_set_string_feature_value (global.pDevice, "AcquisitionMode", config.AcquisitionMode.c_str());
+	{
+		ROS_INFO ("Set AcquisitionMode = %s", config.AcquisitionMode.c_str());
+		arv_device_set_string_feature_value (global.pDevice, "AcquisitionMode", config.AcquisitionMode.c_str());
 
-			ROS_INFO("AcquisitionStop");
-			arv_device_execute_command (global.pDevice, "AcquisitionStop");
-			ROS_INFO("AcquisitionStart");
-			arv_device_execute_command (global.pDevice, "AcquisitionStart");
-		}
+		ROS_INFO("AcquisitionStop");
+		arv_device_execute_command (global.pDevice, "AcquisitionStop");
+		ROS_INFO("AcquisitionStart");
+		arv_device_execute_command (global.pDevice, "AcquisitionStart");
+	}
     	else
     		ROS_INFO ("Camera does not support AcquisitionMode.");
     }
